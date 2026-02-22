@@ -69,7 +69,7 @@ def _serialize_geom(records):
     return records
 
 
-def fetch_pages(client, dataset_id, watermark_ts=None):
+def fetch_pages(client, dataset_id, watermark_ts=None, row_limit=None):
     """
     Generator that yields (page: pl.DataFrame, total_rows: int).
 
@@ -82,6 +82,9 @@ def fetch_pages(client, dataset_id, watermark_ts=None):
     watermark_ts : datetime | None
         UTC datetime used as the lower-bound filter on last_edited_date.
         Pass None to fetch the full dataset.
+    row_limit : int | None
+        Cap the total number of rows fetched.  Useful for testing without
+        pulling the full dataset.
     """
     where = None
     if watermark_ts is not None:
@@ -90,6 +93,8 @@ def fetch_pages(client, dataset_id, watermark_ts=None):
         where = f"last_edited_date > '{ts_str}'"
 
     total_rows = _row_count(client, dataset_id, where=where)
+    if row_limit is not None:
+        total_rows = min(total_rows, row_limit)
     print(f"Target rows : {total_rows:,}")
 
     if total_rows == 0:

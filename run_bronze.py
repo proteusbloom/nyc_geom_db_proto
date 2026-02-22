@@ -17,9 +17,11 @@ Flow
 
 Usage
 -----
-    python run_bronze.py
+    python run_bronze.py              # full / incremental run
+    python run_bronze.py --limit 1000 # cap rows (testing / dry-run)
 """
 
+import argparse
 import os
 import uuid
 from datetime import datetime, timezone
@@ -30,7 +32,7 @@ from pipeline import bronze, extract, state
 from pipeline.config import BUILDINGS_DATASET_ID, DB_PATH
 
 
-def run():
+def run(row_limit=None):
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = duckdb.connect(DB_PATH)
 
@@ -67,7 +69,7 @@ def run():
     conn.begin()
     try:
         for page_df, total_rows in extract.fetch_pages(
-            client, BUILDINGS_DATASET_ID, watermark_ts=watermark
+            client, BUILDINGS_DATASET_ID, watermark_ts=watermark, row_limit=row_limit
         ):
             rows = bronze.append(
                 conn, page_df, run_id, ingested_at, BUILDINGS_DATASET_ID
@@ -99,4 +101,10 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    parser = argparse.ArgumentParser(description="Ingest NYC buildings into bronze layer.")
+    parser.add_argument(
+        "--limit", type=int, default=None, metavar="N",
+        help="Cap total rows fetched (useful for testing without a full pull).",
+    )
+    args = parser.parse_args()
+    run(row_limit=args.limit)
