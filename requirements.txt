@@ -1,0 +1,9 @@
+# Core pipeline dependencies
+duckdb
+polars
+sodapy
+python-dotenv
+requests
+
+# Orchestration
+apache-airflow==2.10.3
