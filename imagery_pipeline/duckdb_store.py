@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 import duckdb
 import polars as pl
@@ -49,6 +52,7 @@ def insert_run(
     conn.register("_runs_df", df)
     conn.execute("INSERT INTO imagery.pipeline_runs SELECT * FROM _runs_df")
     conn.unregister("_runs_df")
+    logger.debug("Inserted run %s (mode=%s, status=%s).", run_id, mode, status)
     return run_id
 
 
@@ -70,6 +74,7 @@ def insert_tile_manifest(conn: duckdb.DuckDBPyConnection, run_id: str, plan: Run
     conn.register("_tile_df", df)
     conn.execute("INSERT INTO imagery.tile_manifest SELECT * FROM _tile_df")
     conn.unregister("_tile_df")
+    logger.debug("Inserted tile manifest for run %s (%d tiles).", run_id, len(plan.distinct_tiles))
 
 
 def insert_bbl_manifest(conn: duckdb.DuckDBPyConnection, run_id: str, plan: RunPlan) -> None:
@@ -94,6 +99,7 @@ def insert_bbl_manifest(conn: duckdb.DuckDBPyConnection, run_id: str, plan: RunP
     conn.register("_bbl_df", df)
     conn.execute("INSERT INTO imagery.bbl_crops SELECT * FROM _bbl_df")
     conn.unregister("_bbl_df")
+    logger.debug("Inserted BBL manifest for run %s (%d buildings).", run_id, len(plan.buildings))
 
 
 def update_run_status(conn: duckdb.DuckDBPyConnection, run_id: str, status: str) -> None:
@@ -101,3 +107,4 @@ def update_run_status(conn: duckdb.DuckDBPyConnection, run_id: str, status: str)
         "UPDATE imagery.pipeline_runs SET status = ? WHERE run_id = ?",
         [status, run_id],
     )
+    logger.debug("Run %s status -> %s.", run_id, status)

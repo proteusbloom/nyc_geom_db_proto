@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from imagery_pipeline.config import PipelineConfig
 from imagery_pipeline.models import BuildingPlan, CropWindow, ResolvedBuilding, RunPlan, StorageEstimate, TileRef
@@ -63,6 +66,13 @@ def plan_run(buildings: Iterable[ResolvedBuilding], config: PipelineConfig) -> R
 
     distinct_tiles = tuple(sorted(tile_map.values(), key=lambda tile: (tile.z, tile.x, tile.y)))
     estimate = estimate_storage(len(distinct_tiles), (plan.crop_window for plan in building_plans), config)
+    logger.info(
+        "Plan complete: %d buildings, %d distinct tiles, peak storage %d bytes (within_cap=%s).",
+        len(building_plans),
+        len(distinct_tiles),
+        estimate.peak_working_bytes,
+        estimate.within_cap,
+    )
     return RunPlan(
         year=config.year,
         zoom=config.zoom,

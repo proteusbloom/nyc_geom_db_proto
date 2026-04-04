@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from collections import Counter
 from pathlib import Path
 
@@ -19,6 +20,8 @@ from imagery_pipeline.duckdb_store import (
 from imagery_pipeline.geometry import StubGeometryResolver
 from imagery_pipeline.models import Bounds4326
 from imagery_pipeline.planner import plan_run
+
+logger = logging.getLogger(__name__)
 
 
 def _load_bbl_mapping(path: Path) -> dict[str, Bounds4326]:
@@ -44,11 +47,21 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--disk-cap-bytes", type=int, default=5_000_000_000)
     parser.add_argument("--temp-tile-dir", default="data/imagery/tmp_tiles")
     parser.add_argument("--output-dir", default="data/imagery/crops")
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Set logging verbosity (default: INFO).",
+    )
     return parser
 
 
 def run_cli(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+    )
     config = PipelineConfig(
         db_path=Path(args.db_path),
         year=args.year,
@@ -58,6 +71,7 @@ def run_cli(argv: list[str] | None = None) -> int:
         output_dir=Path(args.output_dir),
     )
 
+    logger.info("Starting imagery pipeline: command=%s input=%s", args.command, args.input)
     resolver = StubGeometryResolver(_load_bbl_mapping(Path(args.input)))
     buildings = resolver.resolve_many(_load_bbl_mapping(Path(args.input)).keys())
     plan = plan_run(buildings, config)
@@ -70,14 +84,18 @@ def run_cli(argv: list[str] | None = None) -> int:
 
     if not plan.estimate.within_cap:
         update_run_status(conn, run_id, "rejected_storage_cap")
-        print(
-            f"Projected working set {plan.estimate.peak_working_bytes} exceeds cap {plan.disk_cap_bytes}."
+        logger.warning(
+            "Projected working set %d bytes exceeds cap %d bytes — run rejected.",
+            plan.estimate.peak_working_bytes,
+            plan.disk_cap_bytes,
         )
         return 2
 
-    print(
-        f"Planned {len(plan.buildings)} crops across {len(plan.distinct_tiles)} distinct tiles. "
-        f"Projected peak bytes: {plan.estimate.peak_working_bytes}."
+    logger.info(
+        "Planned %d crops across %d distinct tiles. Projected peak bytes: %d.",
+        len(plan.buildings),
+        len(plan.distinct_tiles),
+        plan.estimate.peak_working_bytes,
     )
     if args.command == "preflight":
         update_run_status(conn, run_id, "preflight_ok")
@@ -97,7 +115,7 @@ def run_cli(argv: list[str] | None = None) -> int:
                         tile_path.unlink()
 
     update_run_status(conn, run_id, "completed")
-    print(f"Completed run {run_id}.")
+    logger.info("Completed run %s.", run_id)
     return 0
 
 

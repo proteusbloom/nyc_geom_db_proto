@@ -17,7 +17,7 @@ import polars as pl
 import requests
 from sodapy import Socrata
 
-from pipeline.config import (
+from building_pipeline.config import (
     PAGE_SIZE,
     SOCRATA_APP_TOKEN,
     SOCRATA_DOMAIN,
