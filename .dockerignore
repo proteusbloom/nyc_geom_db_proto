@@ -1,0 +1,45 @@
+.git
+.gitignore
+.env
+.env.*
+*.pyc
+__pycache__
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache
+.coverage
+htmlcov
+dist
+build
+*.egg-info
+.vscode
+.idea
+README.md
+
+docker-compose.yml
+Dockerfile
+.dockerignore
+# Secrets - NEVER copy into Docker images
+auth_token.txt
+*token*.txt
+*.secret
+.env
+.env.*
+credentials.txt
+secreto.txt
+
+# Git and config
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode
+.idea

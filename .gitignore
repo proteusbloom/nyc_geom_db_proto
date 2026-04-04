@@ -1,5 +1,10 @@
 *.duckdb
 *.duckdb.wal
+db/nyc_buildings.duckdb
+db/nyc_buildings.duckdb.wal
 __pycache__/
 *.pyc
 .env
+/.venv/
+/nyc_geom_db/
+data/imagery/
