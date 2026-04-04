@@ -1,50 +1,10 @@
-# Extends pipeline requirements
+# Development dependencies extend runtime requirements
 -r requirements.txt
 
-# Socrata data fetch (pipeline/ module, dev/notebook usage only)
-requests==2.32.5
-sodapy==2.2.0
-charset-normalizer==3.4.4
-urllib3==2.6.3
-
-# Jupyter / notebook stack
+# Notebook / interactive workflow
 ipykernel==7.1.0
 ipython==9.9.0
-jupyter-client==8.8.0
-jupyter-core==5.9.1
-
-# Transitive: ipython
-asttokens==3.0.1
-colorama==0.4.6
-decorator==5.2.1
-executing==2.2.1
-ipython-pygments-lexers==1.1.1
-jedi==0.19.2
-matplotlib-inline==0.2.1
-parso==0.8.5
-prompt-toolkit==3.0.52
-pure-eval==0.2.3
-pygments==2.19.2
-stack-data==0.6.3
-wcwidth==0.3.1
-
-# Transitive: ipykernel
-comm==0.2.3
-debugpy==1.8.19
-nest-asyncio==1.6.0
-packaging==26.0
-psutil==7.2.1
-pyzmq==27.1.0
-tornado==6.5.4
-traitlets==5.14.3
-
-# Transitive: jupyter-core
-platformdirs==4.5.1
-
-# Transitive: jupyter-client → python-dateutil → six
-python-dateutil==2.9.0.post0
-six==1.17.0
 
 # Testing
 pytest==9.0.2
-pytest-cov
+pytest-cov==7.0.0
