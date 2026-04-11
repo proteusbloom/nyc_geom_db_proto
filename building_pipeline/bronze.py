@@ -60,6 +60,17 @@ def append(conn, df, run_id, ingested_at, source_dataset_id):
 
     _ensure_table(conn, df)
 
+    # Reconcile schema: add any columns the table has that this batch is missing
+    # (fill with NULL), and drop any extra columns the batch has that the table doesn't.
+    table_cols = [
+        row[0]
+        for row in conn.execute(f"SELECT * FROM {_TABLE} LIMIT 0").description
+    ]
+    for col in table_cols:
+        if col not in df.columns:
+            df = df.with_columns(pl.lit(None).alias(col))
+    df = df.select(table_cols)
+
     conn.register("_bronze_batch", df)
     conn.execute(f"INSERT INTO {_TABLE} SELECT * FROM _bronze_batch")
     conn.unregister("_bronze_batch")

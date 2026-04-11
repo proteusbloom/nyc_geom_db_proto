@@ -35,7 +35,10 @@ def get_watermark(conn, dataset_id):
                          skip the run entirely if the source hasn't changed.
     """
     row = conn.execute(
-        f"SELECT last_run_at, dataset_updated_at FROM {_TABLE} WHERE dataset_id = ?",
+        f"""
+        SELECT last_run_at, dataset_updated_at FROM {_TABLE}
+        WHERE dataset_id = ? AND last_run_status = 'success'
+        """,
         [dataset_id],
     ).fetchone()
     return (row[0], row[1]) if row else (None, None)

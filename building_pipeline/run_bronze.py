@@ -41,8 +41,16 @@ def run(row_limit=None):
     last_run_at, last_dataset_ts = state.get_watermark(conn, BUILDINGS_DATASET_ID)
     current_dataset_ts = extract.get_dataset_updated_at(BUILDINGS_DATASET_ID)
 
+    bronze_exists = conn.execute(
+        """
+        SELECT COUNT(*) FROM information_schema.tables
+        WHERE table_schema = 'bronze' AND table_name = 'buildings_raw'
+        """
+    ).fetchone()[0]
+
     if (
-        last_dataset_ts is not None
+        bronze_exists
+        and last_dataset_ts is not None
         and current_dataset_ts is not None
         and current_dataset_ts <= last_dataset_ts
     ):
@@ -52,7 +60,7 @@ def run(row_limit=None):
 
     run_id = str(uuid.uuid4())
     ingested_at = datetime.now(timezone.utc)
-    is_full_load = last_run_at is None
+    is_full_load = last_run_at is None or not bronze_exists
     watermark = None if is_full_load else last_run_at
 
     print(f"Run ID : {run_id}")

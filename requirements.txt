@@ -1,5 +1,6 @@
 # Direct runtime dependencies
 duckdb==1.4.3
+pyarrow
 httpx==0.28.1
 pillow==11.3.0
 polars==1.37.1
